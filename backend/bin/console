@@ -1,0 +1,65 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use App\Console\ConsumeMessagesCommand;
+use App\Console\CreateUserCommand;
+use App\Console\LoadFixturesCommand;
+use Doctrine\DBAL\Schema\AbstractAsset;
+use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
+use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
+use Doctrine\Migrations\DependencyFactory;
+use Doctrine\Migrations\Tools\Console\ConsoleRunner as MigrationsConsoleRunner;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\Console\ConsoleRunner as OrmConsoleRunner;
+use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
+use Psr\Container\ContainerInterface;
+use Symfony\Component\Console\Application;
+
+/** @var ContainerInterface $container */
+$container = require __DIR__ . '/../config/bootstrap.php';
+
+/** @var EntityManagerInterface $em */
+$em = $container->get(EntityManagerInterface::class);
+
+// Служебная таблица Doctrine Migrations не описана сущностями. Для команд orm:* (validate-schema,
+// schema-tool) скрываем её, иначе схема считается рассинхронизированной. Для migrations:* фильтр
+// включать нельзя: Migrations перестаёт видеть собственную таблицу версий.
+if (str_starts_with((string) ($argv[1] ?? ''), 'orm:')) {
+    $em->getConnection()->getConfiguration()->setSchemaAssetsFilter(
+        static fn(string|AbstractAsset $asset): bool => ($asset instanceof AbstractAsset ? $asset->getName() : $asset) !== 'doctrine_migration_versions',
+    );
+}
+
+$cli = new Application('products-import');
+
+// doctrine orm:* (orm:validate-schema, orm:schema-tool:* и т.д.)
+OrmConsoleRunner::addCommands($cli, new SingleManagerProvider($em));
+
+// doctrine migrations:*
+$dependencyFactory = DependencyFactory::fromEntityManager(
+    new ConfigurationArray([
+        'table_storage'           => ['table_name' => 'doctrine_migration_versions'],
+        'migrations_paths'        => ['App\\Migrations' => __DIR__ . '/../migrations'],
+        'all_or_nothing'          => true,
+        'check_database_platform' => true,
+    ]),
+    new ExistingEntityManager($em),
+);
+MigrationsConsoleRunner::addCommands($cli, $dependencyFactory);
+
+// app:* — команды приложения
+/** @var ConsumeMessagesCommand $worker */
+$worker = $container->get(ConsumeMessagesCommand::class);
+$cli->add($worker);
+
+/** @var LoadFixturesCommand $fixtures */
+$fixtures = $container->get(LoadFixturesCommand::class);
+$cli->add($fixtures);
+
+/** @var CreateUserCommand $createUser */
+$createUser = $container->get(CreateUserCommand::class);
+$cli->add($createUser);
+
+$cli->run();
