@@ -1,0 +1,57 @@
+<section class="login">
+  <mat-card appearance="outlined" class="login__card">
+    <mat-card-header>
+      <mat-card-title>Вход</mat-card-title>
+      <mat-card-subtitle>Каталог товаров</mat-card-subtitle>
+    </mat-card-header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-card-content class="login__fields">
+        @if (error(); as message) {
+          <div class="error-banner" role="alert">
+            <mat-icon>error</mat-icon>
+            <span>{{ message }}</span>
+          </div>
+        }
+
+        <mat-form-field appearance="outline">
+          <mat-label>Логин</mat-label>
+          <input matInput formControlName="username" autocomplete="username" />
+          @if (form.controls.username.hasError('required')) {
+            <mat-error>Введите логин</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Пароль</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            autocomplete="current-password"
+            [type]="showPassword() ? 'text' : 'password'"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            [attr.aria-label]="showPassword() ? 'Скрыть пароль' : 'Показать пароль'"
+            (click)="showPassword.set(!showPassword())"
+          >
+            <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>Введите пароль</mat-error>
+          }
+        </mat-form-field>
+      </mat-card-content>
+
+      <mat-card-actions class="login__actions">
+        <button mat-flat-button type="submit" [disabled]="submitting()">Войти</button>
+      </mat-card-actions>
+
+      @if (submitting()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </form>
+  </mat-card>
+</section>
