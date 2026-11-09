@@ -36,7 +36,7 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -64,9 +64,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -81,7 +81,7 @@ jobs:
     needs: [backend, frontend]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: PHP (multi-stage, target prod)
         run: docker build -f docker/php/Dockerfile --target prod -t products-import-php:prod .
       - name: Frontend (multi-stage, nginx)
@@ -92,7 +92,7 @@ jobs:
     needs: [backend, frontend]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Подготовить .env
         run: |
@@ -115,7 +115,7 @@ jobs:
 
       - name: Отчёт Playwright
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-report
           path: frontend/playwright-report
