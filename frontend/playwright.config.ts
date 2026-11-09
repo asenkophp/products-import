@@ -1,0 +1,32 @@
+import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * E2E-тесты работают с полностью запущенным приложением (docker compose up):
+ * фронтенд → API → очередь → воркер → БД.
+ * Адрес задаётся через E2E_BASE_URL (по умолчанию — собранный фронтенд в Docker).
+ */
+export default defineConfig({
+  testDir: './e2e',
+  testMatch: '**/*.e2e.ts',
+  timeout: 180_000,
+  expect: { timeout: 15_000 },
+  fullyParallel: false,
+  workers: 1,
+  retries: process.env['CI'] ? 1 : 0,
+  reporter: [['list'], ['html', { open: 'never' }]],
+  use: {
+    baseURL: process.env['E2E_BASE_URL'] ?? 'http://localhost:8081',
+    locale: 'ru-RU',
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: process.env['PW_CHROMIUM_PATH'] ? { executablePath: process.env['PW_CHROMIUM_PATH'] } : {},
+      },
+    },
+  ],
+});

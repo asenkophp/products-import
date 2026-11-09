@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         cacheDirectory="var/phpunit"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         displayDetailsOnTestsThatTriggerWarnings="true">
+    <php>
+        <!-- тесты работают с отдельной базой и очередью в памяти -->
+        <env name="APP_ENV" value="test" force="true"/>
+        <env name="APP_DEBUG" value="1" force="true"/>
+        <env name="DB_NAME" value="products_test" force="true"/>
+        <env name="MESSENGER_TRANSPORT_DSN" value="in-memory://" force="true"/>
+        <env name="IMPORT_RATE_LIMIT" value="1000" force="true"/>
+        <env name="LOGIN_RATE_LIMIT" value="1000" force="true"/>
+        <env name="JWT_SECRET" value="test-secret-0123456789abcdef0123456789abcdef" force="true"/>
+        <env name="JWT_TTL" value="3600" force="true"/>
+    </php>
+
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Api">
+            <directory>tests/Api</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>
