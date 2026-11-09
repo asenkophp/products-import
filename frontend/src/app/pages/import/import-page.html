@@ -1,0 +1,138 @@
+<section class="page">
+  <header class="page__header">
+    <h1>Импорт товаров</h1>
+  </header>
+
+  <mat-card appearance="outlined" class="upload-card">
+    <mat-card-content>
+      <p class="muted">
+        Загрузите файл <b>.xlsx</b> или <b>.ods</b> (до 10 МБ). Товары сопоставляются по внешнему коду:
+        существующие обновляются, новые создаются. Строки с ошибками не прерывают импорт и попадают в отчёт.
+      </p>
+
+      <input #fileInput type="file" hidden [accept]="accept" (change)="onFileSelected($event)" />
+
+      @let state = (state$ | async) ?? { kind: 'idle' };
+      <button
+        mat-flat-button
+        type="button"
+        [disabled]="state.kind === 'uploading' || (state.kind === 'progress' && state.job.progress < 100 && state.job.status !== 'failed')"
+        (click)="fileInput.click()"
+      >
+        <mat-icon>upload_file</mat-icon>
+        Выбрать файл и загрузить
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  @switch (state.kind) {
+    @case ('uploading') {
+      @if (state.kind === 'uploading') {
+        <mat-card appearance="outlined" class="status-card">
+          <mat-card-content>
+            <p>Загружаем файл <b>{{ state.fileName }}</b>…</p>
+            <mat-progress-bar mode="indeterminate" />
+          </mat-card-content>
+        </mat-card>
+      }
+    }
+
+    @case ('error') {
+      @if (state.kind === 'error') {
+        <div class="error-banner" role="alert">
+          <mat-icon>error</mat-icon>
+          <span>{{ state.message }}</span>
+        </div>
+      }
+    }
+
+    @case ('progress') {
+      @if (state.kind === 'progress') {
+        @let job = state.job;
+        <mat-card appearance="outlined" class="status-card">
+          <mat-card-header>
+            <mat-card-title>{{ job.filename }}</mat-card-title>
+            <mat-card-subtitle>
+              Задача #{{ job.id }} · <span class="status" [class]="'status status--' + job.status">{{ statusLabels[job.status] }}</span>
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="progress">
+              <mat-progress-bar
+                [mode]="job.status === 'pending' ? 'indeterminate' : 'determinate'"
+                [value]="job.progress"
+              />
+              <span class="progress__label">{{ job.progress }}% · {{ job.processedRows }} из {{ job.totalRows }} строк</span>
+            </div>
+
+            <dl class="stats">
+              <div><dt>Создано</dt><dd>{{ job.createdCount }}</dd></div>
+              <div><dt>Обновлено</dt><dd>{{ job.updatedCount }}</dd></div>
+              <div><dt>С ошибками</dt><dd [class.stats__bad]="job.failedCount > 0">{{ job.failedCount }}</dd></div>
+              <div><dt>Предупреждений</dt><dd>{{ job.warnings.length }}</dd></div>
+            </dl>
+
+            @if (job.finishedAt) {
+              <p class="muted">Завершено {{ job.finishedAt | date: 'dd.MM.yyyy HH:mm:ss' }}</p>
+            }
+          </mat-card-content>
+
+          @if (job.status === 'completed') {
+            <mat-card-actions>
+              <a mat-button routerLink="/products">
+                <mat-icon>list</mat-icon>
+                Перейти к товарам
+              </a>
+            </mat-card-actions>
+          }
+        </mat-card>
+
+        @if (job.errors.length) {
+          <h2 class="section-title">Отчёт об ошибках ({{ job.errors.length }})</h2>
+          <table mat-table [dataSource]="job.errors" class="issues">
+            <ng-container matColumnDef="row">
+              <th mat-header-cell *matHeaderCellDef>Строка</th>
+              <td mat-cell *matCellDef="let issue">{{ issue.row || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="external_code">
+              <th mat-header-cell *matHeaderCellDef>Внешний код</th>
+              <td mat-cell *matCellDef="let issue">{{ issue.external_code ?? '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="message">
+              <th mat-header-cell *matHeaderCellDef>Ошибка</th>
+              <td mat-cell *matCellDef="let issue">{{ issue.message }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="issueColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: issueColumns"></tr>
+          </table>
+        }
+
+        @if (job.warnings.length) {
+          <mat-expansion-panel class="warnings">
+            <mat-expansion-panel-header>
+              <mat-panel-title>Предупреждения ({{ job.warnings.length }})</mat-panel-title>
+              <mat-panel-description>Строки импортированы, но есть замечания</mat-panel-description>
+            </mat-expansion-panel-header>
+            <table mat-table [dataSource]="job.warnings" class="issues">
+              <ng-container matColumnDef="row">
+                <th mat-header-cell *matHeaderCellDef>Строка</th>
+                <td mat-cell *matCellDef="let issue">{{ issue.row }}</td>
+              </ng-container>
+              <ng-container matColumnDef="external_code">
+                <th mat-header-cell *matHeaderCellDef>Внешний код</th>
+                <td mat-cell *matCellDef="let issue">{{ issue.external_code ?? '—' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="message">
+                <th mat-header-cell *matHeaderCellDef>Сообщение</th>
+                <td mat-cell *matCellDef="let issue">{{ issue.message }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="issueColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: issueColumns"></tr>
+            </table>
+          </mat-expansion-panel>
+        }
+      }
+    }
+  }
+</section>

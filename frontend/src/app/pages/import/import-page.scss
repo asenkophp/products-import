@@ -1,0 +1,68 @@
+.upload-card,
+.status-card {
+  margin-bottom: 16px;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.progress__label {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0;
+
+  div {
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--mat-sys-surface-container);
+  }
+
+  dt {
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 4px 0 0;
+    font: var(--mat-sys-headline-small);
+  }
+}
+
+.stats__bad {
+  color: var(--mat-sys-error);
+}
+
+.status {
+  font-weight: 500;
+}
+
+.status--completed {
+  color: #2e7d32;
+}
+
+.status--failed {
+  color: var(--mat-sys-error);
+}
+
+.section-title {
+  font: var(--mat-sys-title-medium);
+  margin: 24px 0 8px;
+}
+
+.issues {
+  width: 100%;
+}
+
+.warnings {
+  margin-top: 16px;
+}
