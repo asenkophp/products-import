@@ -1,0 +1,12 @@
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - src
+        - config
+    tmpDir: var/phpstan
+    doctrine:
+        # метаданные сущностей и проверка DQL; к БД не подключается (serverVersion задан)
+        objectManagerLoader: phpstan/object-manager.php
